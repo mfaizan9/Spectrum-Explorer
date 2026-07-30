@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Spectrum Explorer</title>
+
+  <link rel="icon" type="image/png" sizes="32x32" href="foundation/klunl_favicon_32.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="foundation/klunl_favicon_180.png">
+
+  <!-- KL-UNL foundation styles (copied unchanged) -->
+  <link href="foundation/kl-unl.css" type="text/css" rel="stylesheet" media="all">
+  <!-- Sim-specific styles (layered on top of the foundation, never editing it) -->
+  <link href="styles/styles.css" type="text/css" rel="stylesheet" media="all">
+
+  <!-- MathJax configuration (must precede the MathJax include). Self-hosted, no CDN. -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['\\(', '\\)']],
+        displayMath: [['\\[', '\\]']]
+      },
+      svg: { fontCache: 'global' },
+      options: {
+        // Keep the contextual "Show Math As" menu enabled (required verification test).
+        enableMenu: true,
+        // Do not let typeset math become a keyboard tab stop (WCAG: display-only).
+        menuOptions: { settings: { assistiveMml: true } }
+      },
+      startup: {
+        ready: function () {
+          MathJax.startup.defaultReady();
+          // Once MathJax is ready, (re)initialize sim equations if the sim has loaded.
+          if (typeof window.klunlInitEqn === 'function') {
+            window.klunlInitEqn();
+          }
+        }
+      }
+    };
+  </script>
+  <script defer src="assets/mathjax/tex-svg.js"></script>
+
+  <!-- KL-UNL foundation scripts (copied unchanged) -->
+  <script defer src="foundation/kl-unl.js"></script>
+  <script defer src="foundation/kl-unl-masthead.js"></script>
+
+  <!-- Sim logic -->
+  <script defer src="simulation.js"></script>
+</head>
+<body>
+  <div class="app-shell">
+    <div class="app-shell__backdrop" aria-hidden="true"></div>
+
+    <!-- Title bar + Reset / Help / About (rendered by the foundation component). -->
+    <kl-unl-masthead sim-id="spectrum010" json-url="foundation/contents.json"></kl-unl-masthead>
+
+    <main class="app-layout se-layout">
+
+      <!-- ===================== DIAGRAM PANEL ===================== -->
+      <section class="panel se-panel se-panel--diagram" aria-labelledby="se-diagram-heading">
+        <h2 id="se-diagram-heading" class="panel__heading">Simulated Spectrum</h2>
+
+        <div class="panel__canvas-wrap se-spectrum">
+          <div class="se-spectrum__scale" aria-hidden="true">
+            <span class="se-spectrum__tick se-spectrum__tick--left">\(400\ \mathrm{nm}\)</span>
+            <span class="se-spectrum__tick se-spectrum__tick--right">\(700\ \mathrm{nm}\)</span>
+          </div>
+          <!-- Original Flash stage draws the 500x50 spectrum band; canvas keeps those
+               internal coordinates and is scaled by CSS. -->
+          <canvas id="se-canvas" width="500" height="50"
+                  role="img"
+                  aria-label="Visible spectrum band from 400 to 700 nanometers, violet on the left through red on the right."></canvas>
+          <p class="se-spectrum__range" aria-hidden="true">Visible range: 400&ndash;700&nbsp;nm</p>
+        </div>
+
+        <!-- Audio-only description of what the diagram currently shows. -->
+        <p id="se-live" class="sr-only" role="status" aria-live="polite"></p>
+      </section>
+
+      <!-- ===================== CONTROLS PANEL ===================== -->
+      <section class="panel se-panel se-panel--controls" aria-label="Spectrum controls">
+        <div class="se-controls-grid">
+
+          <!-- LEFT COLUMN -->
+          <div class="se-col">
+
+            <!-- Spectrum type (Continuous / Emission / Absorption) -->
+            <fieldset class="control-fieldset se-fieldset">
+              <legend class="control-fieldset__legend">Spectrum</legend>
+              <div class="control-choice">
+                <input type="radio" id="se-continuous" name="se-spectrum" value="continuous" checked>
+                <label for="se-continuous">Continuous</label>
+              </div>
+              <div class="control-choice">
+                <input type="radio" id="se-emission" name="se-spectrum" value="emission">
+                <label for="se-emission">Emission</label>
+              </div>
+              <div class="control-choice">
+                <input type="radio" id="se-absorption" name="se-spectrum" value="absorption">
+                <label for="se-absorption">Absorption</label>
+              </div>
+            </fieldset>
+
+            <!-- Luminosity Class (enabled only for Absorption) -->
+            <fieldset class="control-fieldset se-fieldset" id="se-lumclass-fieldset">
+              <legend class="control-fieldset__legend">Luminosity Class</legend>
+              <div class="control-choice">
+                <input type="radio" id="se-class1" name="se-lumclass" value="1">
+                <label for="se-class1">I &mdash; Supergiant</label>
+              </div>
+              <div class="control-choice">
+                <input type="radio" id="se-class3" name="se-lumclass" value="3">
+                <label for="se-class3">III &mdash; Giant</label>
+              </div>
+              <div class="control-choice">
+                <input type="radio" id="se-class5" name="se-lumclass" value="5" checked>
+                <label for="se-class5">V &mdash; Main Sequence</label>
+              </div>
+            </fieldset>
+
+            <!-- Spectral Type slider + Temperature (visible only for Absorption) -->
+            <fieldset class="control-fieldset se-fieldset" id="se-spectraltype-fieldset">
+              <legend class="control-fieldset__legend">Spectral Type</legend>
+
+              <div class="se-slider-row">
+                <span class="se-slider-end" aria-hidden="true">O0</span>
+                <input type="range" id="se-spectraltype" class="control-row__slider se-slider"
+                       min="0" max="70" step="1" value="42"
+                       aria-describedby="se-temp-line">
+                <span class="se-slider-end" aria-hidden="true">M9</span>
+              </div>
+
+              <div class="se-readout-row">
+                <span class="se-readout__label">Type:</span>
+                <span id="se-type-value" class="se-readout__value">G2</span>
+              </div>
+
+              <div class="se-readout-row" id="se-temp-line">
+                <span class="se-readout__label">Temperature:</span>
+                <span id="se-temp-eqn" class="se-readout__value se-temp"></span>
+                <span id="se-temp-sr" class="sr-only"></span>
+              </div>
+            </fieldset>
+
+          </div><!-- /left column -->
+
+          <!-- RIGHT COLUMN -->
+          <div class="se-col">
+
+            <!-- Elements (enabled only for Emission / Absorption) -->
+            <fieldset class="control-fieldset se-fieldset" id="se-elements-fieldset">
+              <legend class="control-fieldset__legend">Elements</legend>
+              <div class="control-grid se-elements-grid">
+                <div class="control-choice">
+                  <input type="checkbox" id="se-ihelium" value="ihelium">
+                  <label for="se-ihelium">Ionized Helium</label>
+                </div>
+                <div class="control-choice">
+                  <input type="checkbox" id="se-imetals" value="imetals">
+                  <label for="se-imetals">Ionized Metals</label>
+                </div>
+                <div class="control-choice">
+                  <input type="checkbox" id="se-helium" value="helium">
+                  <label for="se-helium">Helium</label>
+                </div>
+                <div class="control-choice">
+                  <input type="checkbox" id="se-metals" value="metals">
+                  <label for="se-metals">Metals</label>
+                </div>
+                <div class="control-choice">
+                  <input type="checkbox" id="se-hydrogen" value="hydrogen">
+                  <label for="se-hydrogen">Hydrogen</label>
+                </div>
+                <div class="control-choice">
+                  <input type="checkbox" id="se-molecules" value="molecules">
+                  <label for="se-molecules">Molecules</label>
+                </div>
+              </div>
+              <p class="panel__help se-hint" id="se-elements-hint"></p>
+            </fieldset>
+
+          </div><!-- /right column -->
+
+        </div><!-- /controls grid -->
+      </section>
+
+    </main>
+  </div>
+</body>
+</html>

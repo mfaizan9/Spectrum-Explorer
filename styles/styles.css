@@ -1,0 +1,203 @@
+/* =============================================================================
+ * Spectrum Explorer -- sim-specific styles.
+ * Layered ON TOP of the KL-UNL foundation (foundation/kl-unl.css).
+ * The foundation files are never edited; everything sim-specific lives here.
+ * ===========================================================================*/
+
+/* Larger, zoom-friendly base type (foundation floors body at 0.9rem; WCAG rule
+   asks for ~1.125rem body copy, sized in rem so it tracks the browser setting). */
+body {
+  font-size: 1.125rem;
+  line-height: 1.5;
+}
+
+/* --- Layout -------------------------------------------------------------- */
+/* The two sim panels each span the full width and stack vertically, while we
+   still lean on the foundation's .app-layout / .app-shell for the shell. */
+.se-layout {
+  display: block;               /* override the foundation's 2-col grid here */
+  gap: 0;
+}
+
+.se-panel {
+  margin-bottom: 0.75rem;
+}
+
+.panel__heading {
+  font-size: 1.2rem;
+}
+
+.control-fieldset__legend {
+  font-size: 1.1rem;
+}
+
+/* --- Spectrum band ------------------------------------------------------- */
+.se-spectrum {
+  max-width: 46rem;             /* keep the 10:1 band from getting gigantic */
+  margin: 0 auto;
+  padding: 0.25rem 1rem 0.75rem;
+  box-sizing: border-box;
+}
+
+.se-spectrum__scale {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1rem;
+  line-height: 1.2;
+  margin-bottom: 0.25rem;
+}
+
+.se-spectrum__tick {
+  font-weight: 600;
+}
+
+#se-canvas {
+  display: block;
+  width: 100%;
+  height: auto;                 /* preserve aspect ratio while scaling */
+  aspect-ratio: 500 / 50;       /* matches the internal band size */
+  border-radius: 2px;
+  /* checkerboard-free solid backdrop so emission black reads as intentional */
+  background: #000;
+}
+
+.se-spectrum__range {
+  margin: 0.35rem 0 0;
+  font-size: 0.95rem;
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* --- Controls grid (mirrors the original: Spectrum + Luminosity at left,
+       Elements at right) ------------------------------------------------- */
+.se-controls-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem 2rem;
+  padding: 0.75rem 0 1rem;
+  align-items: start;
+}
+
+.se-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.se-fieldset {
+  border: 1px solid var(--border-color, #767676);
+  border-radius: 6px;
+  padding: 0.5rem 1rem 0.75rem;
+}
+
+.se-fieldset .control-fieldset__legend {
+  padding: 0 0.4rem;
+}
+
+/* Elements laid out in two aligned columns (as in the original). */
+.se-elements-grid {
+  gap: 0.4rem 1.25rem;
+}
+
+/* Consistent spacing + comfortable, touch-sized rows for choices. */
+.control-choice {
+  min-height: 2.25rem;
+  gap: 0.5rem;
+}
+
+.control-choice label {
+  font-size: 1.0625rem;
+}
+
+/* Disabled fieldsets: dim but keep >=4.5:1 for any remaining text. */
+.se-disabled .control-fieldset__legend,
+.se-disabled .control-choice label {
+  color: #6b6b6b;
+}
+
+/* --- Spectral-type slider ----------------------------------------------- */
+.se-slider-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0.25rem 0 0.75rem;
+}
+
+.se-slider-end {
+  font-weight: 600;
+  font-size: 0.95rem;
+  min-width: 1.6rem;
+  text-align: center;
+}
+
+.se-slider {
+  width: 100%;
+  min-height: 2.75rem;          /* comfortable touch target */
+  cursor: pointer;
+}
+
+/* --- Readout rows (Type / Temperature) with aligned label + value ------- */
+.se-readout-row {
+  display: grid;
+  grid-template-columns: 8.5rem 1fr;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.se-readout__label {
+  font-weight: 600;
+}
+
+.se-readout__value {
+  font-size: 1.125rem;
+}
+
+.se-temp {
+  font-variant-numeric: tabular-nums;
+}
+
+.se-hint {
+  color: #4a4a4a;
+  margin-top: 0.5rem;
+}
+
+/* MathJax output is display-only: never a tab stop, and let it wrap/scroll. */
+mjx-container {
+  outline: none;
+}
+mjx-container[tabindex] {
+  /* Guard against configs that make typeset math focusable (WCAG 8b). */
+  outline: none;
+}
+
+/* --- Responsive: collapse to a single column for phone portrait --------- */
+@media (max-width: 40rem) {
+  .se-controls-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  .se-elements-grid {
+    grid-template-columns: 1fr 1fr;   /* keep the two element columns */
+  }
+  .se-readout-row {
+    grid-template-columns: 7.5rem 1fr;
+  }
+}
+
+@media (max-width: 26rem) {
+  .se-elements-grid {
+    grid-template-columns: 1fr;       /* stack elements on very narrow screens */
+  }
+}
+
+/* --- Reduced motion: this sim has no continuous animation, but respect the
+       preference for any incidental transitions. --------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
